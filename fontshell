@@ -1,0 +1,42 @@
+#!env python3
+from fontTools.ttLib import TTFont
+import sys
+
+font = TTFont(sys.argv[1])
+
+haveiPython = True
+
+try:
+    import IPython
+except ImportError:
+    haveiPython = False
+
+if haveiPython:
+    IPython.embed()
+else:
+    import code
+    import readline
+    import rlcompleter
+    import os
+    import atexit
+
+    vars = globals()
+    vars.update(locals())
+    readline.set_completer(rlcompleter.Completer(vars).complete)
+    readline.parse_and_bind("tab: complete")
+    histfile = os.path.expanduser("~" + os.getlogin() + os.sep + ".fontshell_history")
+    readline.set_history_length(500)
+    try:
+        readline.read_history_file(histfile)
+    except IOError as e:  # [Errno 13] Permission denied
+        print(e)
+
+    def write_history_file():
+        try:
+            readline.write_history_file(histfile)
+        except IOError as ex:  # [Errno 13] Permission denied
+            print(ex)
+
+    atexit.register(write_history_file)
+
+    code.InteractiveConsole(vars).interact()
