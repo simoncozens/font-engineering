@@ -17,6 +17,7 @@ def onchange2(font, stage, lookupid, buf):
 
 def poskey(pos):
 	skey = ""
+	if not pos: return ""
 	if pos[0] != 0 or pos[1] != 0:
 		skey = "<%i,%i>" % (pos[0],pos[1])
 	if pos[2] != 0:
@@ -28,15 +29,16 @@ def key(buf):
 
 font1.shape(text, onchange=onchange1)
 font2.shape(text, onchange=onchange2)
-for h in history1: print(h)
-print("")
-for h in history2: print(h)
-if history1[-1] != history2[-1]:
+if history1[-1][2] != history2[-1][2]:
+	print("   font1⮯ ⮮font2")
 	for h1, h2 in zip(history1, history2):
 		if h1[2] == h2[2]:
-			print("%s(%2i/%2i)\t%s" % (h1[0], h1[1], h2[1], key(h1[2])))
+			print("✔ %s(%2i/%2i)  %s" % (h1[0], h1[1], h2[1], key(h1[2])))
 		else:
-			print("First difference appeared at lookup %i (font1) %i (font2)" % (h1[1],h2[1]))
-			print("font1\t\t%s " % key(h1[2]))
-			print("font2\t\t%s " % key(h2[2]))
+			print("")
+			print("First difference appeared at %s lookup %i (font1) / %i (font2)" % (h1[0], h1[1],h2[1]))
+			print("font1          %s " % key(h1[2]))
+			print("font2          %s " % key(h2[2]))
 			break
+else:
+	print("✔ No differences")

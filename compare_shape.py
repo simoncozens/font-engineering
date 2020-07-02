@@ -2,14 +2,37 @@ import uharfbuzz as hb
 from fontTools.ttLib import TTFont
 import sys
 from argparse import ArgumentParser
+import warnings
 
-parser = ArgumentParser()
+parser = ArgumentParser(description="Compare shaping results for two fonts")
 parser.add_argument("file1", help="First font to compare", metavar="FILE1")
 parser.add_argument("file2", help="Second font to compare", metavar="FILE2")
 parser.add_argument("wordlist", help="File containing words", metavar="WORDLIST")
+parser.add_argument(
+    "--ignorables",
+    help="Glyph names to ignore in output (comma separated)",
+    metavar="GLYPHS",
+)
+parser.add_argument(
+    "--features",
+    help="OpenType feature string (+xxxx, -xxxx, comma separated)",
+    metavar="FEATURES",
+)
 args = parser.parse_args()
 
-ignorables = set(["sp0", "sp1", "sp2", "sp3", "sp4", "sp5"])
+ignorables = []
+if args.ignorables:
+    ignorables = args.ignorables.split(",")
+
+features = {}
+if args.features:
+    for f in args.features.split(","):
+        if f[0] == "+":
+            features[f[1:]] = True
+        elif f[0] == "-":
+            features[f[1:]] = True
+        else:
+            warnings.warn("Unable to parse feature '%s'" % f)
 
 
 def shaping_string(fontdata, glyphOrder, text, language=None):
