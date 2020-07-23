@@ -10,7 +10,7 @@ General purpose tool for investigating OTF/TTF information from the command line
 
 Sometimes you need to poke at a font in its fontTools representation. I got very tired of typing
 
-```
+```python-console
 >>> from fontTools.ttLib import TTFont
 >>> font = TTFont("whatever.otf")
 ```
@@ -29,7 +29,7 @@ I was converting a font from one format to another, and wanted to make sure that
 
 So, `compare_shape.py` told you that a test failed and there was a difference between the shaping outputs of two fonts, but it didn't tell you *why* that happened. That's what `shape-diff.py` does. Give it two fonts and a text, and it'll report what went wrong:
 
-```
+```console
 $ python3 shape-diff.py NNU.ttf NNU2.ttf 'نسس'
    font1⮯ ⮮font2
 ✔ GSUB( 5/20)  Noon=0|Seen=1|SeenFin=2
