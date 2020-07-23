@@ -2,11 +2,11 @@
 
 This repository contains a number of smaller scripts and libraries that I find useful in my font engineering work and don't want to keep to myself.
 
-## interrofont
+## [`interrofont`](./interrofont)
 
 General purpose tool for investigating OTF/TTF information from the command line. See http://www.corvelsoftware.co.uk/software/interrofont/ for usage.
 
-## fontshell
+## [`fontshell`](./fontshell)
 
 Sometimes you need to poke at a font in its fontTools representation. I got very tired of typing
 
@@ -17,15 +17,15 @@ Sometimes you need to poke at a font in its fontTools representation. I got very
 
 *every single time*, so I wrote `fontshell`. Run `fontshell whatever.otf` and you are dropped into a Python REPL with the `font` variable set to a `fontTools.ttLib.ttFont.TTFont` object. Bonus: If you have IPython installed, you get tab completion of methods *and* pretty colours too!
 
-## dumptable
+## [`dumptable`](./dumptable)
 
 This extracts a table from a sfnt file and outputs it as a raw binary string. I use this when debugging glyph naming issues and other times TTX gets too clever and doesn't tell me everything I need to know about a table. It's rare that you'll need it, but if you need it, you'll *really* need it.
 
-## compare_shape.py
+## [`compare_shape.py`](./compare_shape.py)
 
 I was converting a font from one format to another, and wanted to make sure that the layout rules were equivalent between the two. This script takes two fonts and a list of words, and checks that the shaping output from Harfbuzz is equal, outputting a report of passed and failed tests, as well as any shaping differences.
 
-## shape-diff.py
+## [`shape-diff.py`](./shape-diff.py)
 
 So, `compare_shape.py` told you that a test failed and there was a difference between the shaping outputs of two fonts, but it didn't tell you *why* that happened. That's what `shape-diff.py` does. Give it two fonts and a text, and it'll report what went wrong:
 
@@ -44,7 +44,7 @@ font1          BehxIni.outD1=0|sp0=0|sp0=0|OneDotAboveNS=0|SeenMed.SWinAoutT2=1|
 font2          BehxIni.outD1=0|OneDotAboveNS=0|SeenMed.SWinAoutT2=1|SeenFin=2
 ```
 
-## vharfbuzz.py
+## [`vharfbuzz.py`](./vharfbuzz.py)
 
 `shape-diff.py` requires a library called vharfbuzz, which is a smarter wrapper around the wonderful [uharfbuzz](https://github.com/harfbuzz/uharfbuzz). uharfbuzz is a bridge between Python and harfbuzz, but it's quite low-level. vharfbuzz makes it a tiny bit easier to use. See the docstrings for this module. Here is a sample session:
 
