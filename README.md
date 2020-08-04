@@ -2,13 +2,13 @@
 
 This repository contains a number of smaller scripts and libraries that I find useful in my font engineering work and don't want to keep to myself.
 
-## shape
+## [`shape`](./shape)
 
 This is a simple wrapper for `hb-shape` and `hb-view`, but I use it _all the
 time_ - like, _hundreds_ of times a day. You will need to be using
 [iTerm2](https://www.iterm2.com/index.html) for your terminal and install the [shell integration](https://www.iterm2.com/documentation-shell-integration.html) tools so that it can display images inline. Once you've done that, use `shape <fontfile> <text>` to display both the shaped glyph string and the output image in your termal. You can also pass any command line arguments that make sense to `hb-shape` or `hb-view`: `-V` to get a shaping trace, `--features=...` and so on:
 
-![][shape.png]
+![](shape.png)
 
 Top tip: if you're using `zsh` for your shell, add this to your `.zshrc` and you will be able to tab-complete font files:
 
