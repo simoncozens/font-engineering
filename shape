@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+use IPC::Run qw(run);
+my @shape_args = @ARGV;
+system("hb-shape", @shape_args);
+my @view_args = ("hb-view", "-O", "png", grep {$_ ne "-V"} @shape_args);
+my @magick_args = qw(magick  png:- -trim png:/tmp/shape.png);
+run(\@view_args, "|", \@magick_args) && system("imgcat /tmp/shape.png");
