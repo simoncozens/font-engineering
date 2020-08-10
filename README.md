@@ -66,3 +66,7 @@ font2          BehxIni.outD1=0|OneDotAboveNS=0|SeenMed.SWinAoutT2=1|SeenFin=2
 >>> v.serialize_buf(buf)
 'o=0+1168|f=1+711|fi=2+1134|c=4+1072|i=5+497|a=6+1114|l=7+497'
 ```
+
+## [`stringbrewer`](./stringbrewer)
+
+StringBrewer has graduated to [its own repository](https://github.com/simoncozens/stringbrewer).
