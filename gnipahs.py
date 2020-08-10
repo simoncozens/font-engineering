@@ -80,8 +80,13 @@ def do_test(string, options):
         tpass(test, string, "overlap test")
 
     if len(test["options"]) > 0:
-        expected = test["options"][0]
-        # XXX
+        buf = vhb.shape(string)
+        expected = options[0]
+        got = vhb.serialize_buf(buf)
+        if expected == got:
+            tpass(test, string, "shaping test")
+        else:
+            tfail(test, string, "shaping text: expected %s got %s" % (expected, got))
 
 
 for test in tests:
