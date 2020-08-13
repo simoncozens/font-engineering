@@ -116,3 +116,30 @@ This may output test results like so:
 ```
 
 Oh dear.
+
+## [`glypholympics`](./glypholympics)
+
+When composing test strings and writing OpenType rules, I often find myself wanting to know "What are the tallest glyphs in the font?" "What are the widest glyphs in the font?" And I haven't got time to open a font editor. I just want the answers.
+
+```
+$ ./glypholympics Hind-Regular.otf
+Widest    :  dvK_S_P_LA(2082) dvmI.a31(2118) dvmI.a32(2169)
+Narrowest :  NULL(0) CR(0) space(0)
+                                                                [Horizontal ink]
+
+Fattest   :  itfLogo(1648) dvL_K_YA(1670) dvK_S_P_LA(2038)
+Thinnest  :  NULL(0) CR(0) dvmU(0)
+                                                            [Horizontal advance]
+
+Tallest   :  dvCandrabindu(1003) dvmEcandra_Anusvara(1003) dvmOcandra_Anusvara(1003)
+Shortest  :  dvNukta(-75) dvVirama(-68) cedilla(-51)
+                                                                          [yMax]
+
+Highest   :  zerowidthnonjoiner(1041) zerowidthjoiner(1046) radical(1096)
+Lowest    :  NULL(0) CR(0) space(0)
+                                                                  [Vertical ink]
+
+Deepest   :  dvmvRR(-440) dvmvLL(-437) dvNG_R(-373)
+Shallowest:  dvCandrabindu(739) dvmEcandra_Anusvara(739) dvAnusvara.amI(834)
+                                                                          [yMin]
+```

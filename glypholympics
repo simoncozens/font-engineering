@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+from fontTools.ttLib import TTFont
+import argparse
+from glyphtools import categorize_glyph, get_glyph_metrics
+import shutil
+from termcolor import colored
+
+
+parser = argparse.ArgumentParser(description="Find widest/tallest/etc. glyphs")
+parser.add_argument("font", help="font file to process", metavar="FONT")
+parser.add_argument("--marks", action="store_true", help="Restrict to marks")
+parser.add_argument("--bases", action="store_true", help="Restrict to bases")
+parser.add_argument("--show", help="Number to show", type=int, default=3)
+
+args = parser.parse_args()
+width = shutil.get_terminal_size((80, 20))
+
+
+def rightalign(x):
+    print(colored(" " * (width.columns - len(x)) + x, "grey"))
+
+
+font = TTFont(args.font)
+glyphset = font.getGlyphOrder()
+if args.marks:
+    glyphset = list(filter(lambda g: categorize_glyph(font, g)[0] == "mark", glyphset))
+if args.bases:
+    glyphset = list(filter(lambda g: categorize_glyph(font, g)[0] == "base", glyphset))
+
+metricsarray = [{**get_glyph_metrics(font, g), "glyphname": g} for g in glyphset]
+
+
+def winners(label, key, invert=False):
+    by_metric = sorted(metricsarray, key=key)
+    if invert:
+        lineup = [(x["glyphname"], int(key(x))) for x in by_metric[: args.show]]
+    else:
+        lineup = [(x["glyphname"], int(key(x))) for x in by_metric[-args.show :]]
+    label = colored(label, "green", attrs=["bold"])
+    print(f"{label}:  ", end="")
+    if args.show == 3:
+        print("%s(%i)" % (colored(lineup[0][0], "yellow"), lineup[0][1]), end=" ")
+        print("%s(%i)" % lineup[1], end=" ")
+        print(
+            "%s(%i)" % (colored(lineup[2][0], "yellow", attrs=["dark"]), lineup[2][1])
+        )
+    else:
+        print(" ".join(["%s(%i)" % l for l in lineup]))
+
+
+winners("Widest    ", lambda g: g["xMax"] - g["xMin"])
+winners("Narrowest ", lambda g: g["xMax"] - g["xMin"], invert=True)
+rightalign("[Horizontal ink]")
+print()
+winners("Fattest   ", lambda g: g["width"])
+winners("Thinnest  ", lambda g: g["width"], invert=True)
+rightalign("[Horizontal advance]")
+print()
+winners("Tallest   ", lambda g: g["yMax"])
+winners("Shortest  ", lambda g: g["yMax"], invert=True)
+rightalign("[yMax]")
+print()
+winners("Highest   ", lambda g: g["yMax"] - g["yMin"])
+winners("Lowest    ", lambda g: g["yMax"] - g["yMin"], invert=True)
+rightalign("[Vertical ink]")
+print()
+winners("Deepest   ", lambda g: g["yMin"], invert=True)
+winners("Shallowest", lambda g: g["yMin"])
+rightalign("[yMin]")
+if any(["rise" in g and g["rise"] > 0 for g in metricsarray]):
+    print()
+    winners("Steepest  ", lambda g: g["rise"])
+    winners("Flattest  ", lambda g: g["rise"], invert=True)
+print()
