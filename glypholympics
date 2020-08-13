@@ -4,6 +4,7 @@ import argparse
 from glyphtools import categorize_glyph, get_glyph_metrics
 import shutil
 from termcolor import colored
+import re
 
 
 parser = argparse.ArgumentParser(description="Find widest/tallest/etc. glyphs")
@@ -11,6 +12,7 @@ parser.add_argument("font", help="font file to process", metavar="FONT")
 parser.add_argument("--marks", action="store_true", help="Restrict to marks")
 parser.add_argument("--bases", action="store_true", help="Restrict to bases")
 parser.add_argument("--show", help="Number to show", type=int, default=3)
+parser.add_argument("--filter", help="Glyph name filter (regular expression)", type=str)
 
 args = parser.parse_args()
 width = shutil.get_terminal_size((80, 20))
@@ -26,7 +28,8 @@ if args.marks:
     glyphset = list(filter(lambda g: categorize_glyph(font, g)[0] == "mark", glyphset))
 if args.bases:
     glyphset = list(filter(lambda g: categorize_glyph(font, g)[0] == "base", glyphset))
-
+if args.filter:
+    glyphset = list(filter(lambda g: re.match(args.filter, g), glyphset))
 metricsarray = [{**get_glyph_metrics(font, g), "glyphname": g} for g in glyphset]
 
 
