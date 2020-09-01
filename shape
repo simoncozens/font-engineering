@@ -1,7 +1,31 @@
 #!/usr/bin/perl
 use IPC::Run qw(run);
+my $TMPFILE = "/tmp/shape.png";
+my @imgcat_args, @magick_args;
+
+if ($ENV{TERM} == "xterm-kitty") {
+  @imgcat_args = ("kitty", "+icat", $TMPFILE);
+} elsif ($ENV{TERMINAL} == "iTerm.app") {
+  @imgcat_args = ("imgcat", $TMPFILE);
+} else {
+  print STDERR ("Your terminal seems unsupported. Are you using iTerm2 or " .
+                "Kovid Goyal's TTY (`kitty`)?\n");
+  exit(1);
+}
+
+$MAGICK=`which gm`;
+if (length $MAGICK == 0) {
+  $MAGICK=`which magick`;
+  @magick_args = ("magick", "png:-", "-trim", $TMPFILE);
+  if (length $MAGICK == 0) {
+    print STDERR ("Error: No Imagemagick found\n");
+    exit(1);
+  }
+} else {
+  @magick_args = ("gm", "convert", "-", "-trim", $TMPFILE);
+}
+
 my @shape_args = @ARGV;
 system("hb-shape", @shape_args);
 my @view_args = ("hb-view", "-O", "png", grep {$_ ne "-V"} @shape_args);
-my @magick_args = qw(magick  png:- -trim png:/tmp/shape.png);
-run(\@view_args, "|", \@magick_args) && system("imgcat /tmp/shape.png");
+run(\@view_args, "|", \@magick_args) && run(\@imgcat_args);
