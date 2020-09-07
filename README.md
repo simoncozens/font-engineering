@@ -25,6 +25,22 @@ Top tip: if you're using `zsh` for your shell, add this to your `.zshrc` and you
 
 General purpose tool for investigating OTF/TTF information from the command line. See http://www.corvelsoftware.co.uk/software/interrofont/ for usage.
 
+## [`otfsurgeon`](./otfsurgeon)
+
+General purpose tool for slicing and dicing OTF/TTF binary table data. Like
+[`dumptable`](./dumptable) but more so:
+
+```shell
+otfsurgeon -i f.ttf dump --ttx name # Dumps name table as XML to stdout
+otfsurgeon -i f.ttf dump name > name.bin # Dumps name table as binary to stdout
+
+otfsurgeon -i f2.ttf add name < name.bin # Adds the name table from stdin
+
+otfsurgeon -i f.ttf strip Debg DSIG # Removes the Debg and DSIG tables from the font
+
+otfsurgeon -i f.ttf steal f2.ttf DSIG # Copies the DSIG table from f2.ttf
+```
+
 ## [`fontshell`](./fontshell)
 
 Sometimes you need to poke at a font in its fontTools representation. I got very tired of typing
