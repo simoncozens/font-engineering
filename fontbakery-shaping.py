@@ -58,13 +58,17 @@ def run_a_set_of_tests(ttFont, run_a_test, test_filter, generate_report):
     filename = Path(ttFont.reader.file.name)
     vharfbuzz = Vharfbuzz(filename)
     shaping_file_found = False
-    shaping_basedir = Path("qa", "shaping")
+    shaping_basedir = Path("qa", "shaping_tests")
     ran_a_test = False
     for shaping_file in shaping_basedir.glob("*.json"):
         shaping_file_found = True
-        shaping_input_doc = json.loads(shaping_file.read_text())
-        configuration = shaping_input_doc.get("configuration", {})
+        try:
+            shaping_input_doc = json.loads(shaping_file.read_text())
+        except Exception as e:
+            yield FAIL, (f"{shaping_file}: Invalid JSON: {e}.")
+            return
 
+        configuration = shaping_input_doc.get("configuration", {})
         try:
             shaping_tests = shaping_input_doc["tests"]
         except KeyError:
@@ -207,7 +211,7 @@ def forbidden_glyph_test_results(shaping_file, failed_tests):
 
 @check(id="com.google.fonts/check/shaping/collides")
 def com_google_fonts_check_shaping_collides(ttFont):
-    """Check that no collides glyphs are found while shaping"""
+    """Check that no collisions are found while shaping"""
     yield from run_a_set_of_tests(
         ttFont,
         run_collides_glyph_test,
@@ -248,10 +252,14 @@ def run_collides_glyph_test(filename, vharfbuzz, test, configuration, failed_tes
 
 def collides_glyph_test_results(shaping_file, failed_tests):
     report_items = []
+    seen_bumps = {}
     for shaping_text, bumps in failed_tests:
         # Make HTML report here.
+        if tuple(bumps) in seen_bumps:
+            continue
+        seen_bumps[tuple(bumps)] = True
         report_items.append(
-            f" * {shaping_text} produced collisions: {',' .join(bumps)}"
+            f" * {',' .join(bumps)} collision found in e.g. '{shaping_text}'"
         )
 
     yield FAIL, (
