@@ -46,7 +46,7 @@ class Vharfbuzz:
 
         return handle_message
 
-    def shape(self, text, onchange=None):
+    def shape(self, text, parameters=None, onchange=None):
         """Shapes a text
 
     This shapes a piece of text, return a uharfbuzz `Buffer` object.
@@ -64,11 +64,20 @@ class Vharfbuzz:
         buf = hb.Buffer()
         buf.add_str(text)
         buf.guess_segment_properties()
+        if "script" in parameters and parameters["script"]:
+            buf.script = parameters["script"]
+        if "direction" in parameters and parameters["direction"]:
+            buf.direction = parameters["direction"]
+        if "language" in parameters and parameters["language"]:
+            buf.language = parameters["language"]
+        features = parameters.get("features")
+        if "variations" in parameters:
+            self.hbfont.set_variations(parameters["variations"])
         self.stage = "GSUB"
         if onchange:
             f = self.make_message_handling_function(buf, onchange)
             buf.set_message_func(f)
-        hb.shape(self.hbfont, buf, shapers=self.shapers)
+        hb.shape(self.hbfont, buf, features, shapers=self.shapers)
         self.stage = "GPOS"
         return buf
 
@@ -84,12 +93,16 @@ class Vharfbuzz:
             outs.append(l)
         return outs
 
-    def serialize_buf(self, buf):
+    def serialize_buf(self, buf, glyphsonly=False):
         """Returns the contents of the given buffer in a string format similar to
     that used by hb-shape."""
         outs = []
         for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
-            outs.append("%s=%i" % (self.glyphOrder[info.codepoint], info.cluster))
+            glyphname = self.glyphOrder[info.codepoint]
+            if glyphsonly:
+                outs.append(glyphname)
+                continue
+            outs.append("%s=%i" % (glyphname, info.cluster))
             if self.stage == "GPOS":
                 outs[-1] = outs[-1] + "+%i" % (pos.position[2])
             if self.stage == "GPOS" and (pos.position[0] != 0 or pos.position[1] != 0):
