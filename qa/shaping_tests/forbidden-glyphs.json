@@ -1,0 +1,21 @@
+{
+  "configuration": {
+    "forbidden_glyphs": [ ".notdef" ],
+    "ingredients": {
+      "Vowel": "[aeoiu]",
+      "Kanji": "字"
+    }
+  },
+  "tests": [
+    {
+      "input": "No forbidden glyphs here, but no expectation either."
+    },
+    {
+      "input": "禁止"
+    },
+    {
+      "input_type": "pattern",
+      "input": "Vowel Kanji?"
+    }
+  ]
+}

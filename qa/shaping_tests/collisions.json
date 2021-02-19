@@ -1,0 +1,18 @@
+{
+  "configuration": {
+    "collidoscope": { "area": 0 },
+    "ingredients": {
+      "TrickyLatin": "[dTpLl]",
+      "AccentedStuff": "[\u00E0-\u00F6]"
+    }
+  },
+  "tests": [
+    {
+      "input": "dïïl"
+    },
+    {
+      "input_type": "pattern",
+      "input": "TrickyLatin AccentedStuff{1,2} TrickyLatin"
+    }
+  ]
+}

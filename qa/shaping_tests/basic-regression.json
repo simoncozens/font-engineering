@@ -1,0 +1,27 @@
+{
+  "configuration": {
+    "defaults": {
+      "script": "DFLT",
+      "language": "dflt",
+      "direction": "ltr"
+    }
+  },
+  "tests": [
+    {
+      "input": "abcd",
+      "expectation": {
+        "default": "a|b|c|d",
+        "A_Funny_Font.ttf": "a.funny|b|c|d"
+      }
+    },
+    {
+      "input": "fi",
+      "expectation": "f_i"
+    },
+    {
+      "input": "fi",
+      "features": { "liga": false },
+      "expectation": "f|i"
+    }
+  ]
+}
