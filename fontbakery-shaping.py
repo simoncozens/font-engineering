@@ -197,7 +197,7 @@ def forbidden_glyph_test_results(shaping_file, failed_tests):
     for shaping_text, output_serialized, forbidden in failed_tests:
         # Make HTML report here.
         report_items.append(
-            f" * {shaping_text} produced '{forbidden}'\n   {output_serialized}"
+            f"      * {shaping_text} produced '{forbidden}'\n       {output_serialized}"
         )
 
     yield FAIL, (
@@ -259,7 +259,7 @@ def collides_glyph_test_results(shaping_file, failed_tests):
             continue
         seen_bumps[tuple(bumps)] = True
         report_items.append(
-            f" * {',' .join(bumps)} collision found in e.g. '{shaping_text}'"
+            f"      * {',' .join(bumps)} collision found in e.g. '{shaping_text}'"
         )
 
     yield FAIL, (
