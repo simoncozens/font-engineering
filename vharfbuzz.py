@@ -4,6 +4,14 @@ import uharfbuzz as hb
 from fontTools.ttLib import TTFont
 import re
 
+class FakeBuffer():
+    def __init__(self):
+        pass
+
+class FakeItem():
+    def __init__(self):
+        pass
+
 
 class Vharfbuzz:
     def __init__(self, filename):
@@ -59,7 +67,8 @@ class Vharfbuzz:
     - ``lookupid``: the current lookup ID
     - ``buffer``: a copy of the buffer as a list of lists (glyphname, cluster, position)
     """
-
+        if not parameters:
+            parameters = {}
         self.prepare_shaper()
         buf = hb.Buffer()
         buf.add_str(text)
@@ -103,11 +112,28 @@ class Vharfbuzz:
                 outs.append(glyphname)
                 continue
             outs.append("%s=%i" % (glyphname, info.cluster))
+            if self.stage == "GPOS" and (pos.position[0] != 0 or pos.position[1] != 0):
+                outs[-1] = outs[-1] + "@%i,%i" % (pos.position[0], pos.position[1])
             if self.stage == "GPOS":
                 outs[-1] = outs[-1] + "+%i" % (pos.position[2])
-            if self.stage == "GPOS" and (pos.position[0] != 0 or pos.position[1] != 0):
-                outs[-1] = outs[-1] + "@<%i,%i>" % (pos.position[0], pos.position[1])
         return "|".join(outs)
+
+    def buf_from_string(self, s):
+        # The inverse operation, returns an object with a "hb.Buffer-like interface"
+        buf = FakeBuffer()
+        buf.glyph_infos = []
+        buf.glyph_positions = []
+        for item in s.split("|"):
+            m = re.match(r"^(.*)=(\d+)(@(\d+),(\d+))?(\+(\d+))?$", item)
+            groups = m.groups()
+            info = FakeItem()
+            info.codepoint = self.ttfont.getGlyphID(groups[0])
+            info.cluster = int(groups[1])
+            buf.glyph_infos.append(info)
+            pos = FakeItem()
+            pos.position = [ int(x or 0) for x in (groups[3], groups[4], groups[6], 0) ]  # Sorry, vertical scripts
+            buf.glyph_positions.append(pos)
+        return buf
 
     def setup_svg_draw_funcs(self):
         if self.drawfuncs:
@@ -130,7 +156,7 @@ class Vharfbuzz:
         def close_path(c):
             c["output_string"] = c["output_string"] + "Z"
 
-        self.drawfuncs = hb.DrawFuncs.create()
+        self.drawfuncs = hb.DrawFuncs()
         self.drawfuncs.set_move_to_func(move_to)
         self.drawfuncs.set_line_to_func(line_to)
         self.drawfuncs.set_cubic_to_func(cubic_to)
@@ -150,9 +176,20 @@ class Vharfbuzz:
 
     def buf_to_svg(self, buf):
         x_cursor = 0
-        y_cursor = 0
         paths = []
         svg = ""
+        if "hhea" in self.ttfont:
+            ascender = self.ttfont["hhea"].ascender
+            descender = self.ttfont["hhea"].descender
+            fullheight = ascender - descender
+        elif "OS/2":
+            ascender = self.ttfont["OS/2"].sTypoAscender
+            descender = self.ttfont["OS/2"].sTypoDescender
+            fullheight = ascender - descender
+        else:
+            fullheight = 1500
+        y_cursor = -descender
+
         for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
             glyph_path = self.glyph_to_svg_path(info.codepoint)
             dx, dy = pos.position[0], pos.position[1]
@@ -166,8 +203,8 @@ class Vharfbuzz:
 
         svg = (
             (
-                f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {x_cursor} 2000"'
-                + ' transform="matrix(1 0 0 -1 0 1000)">\n'
+                f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {x_cursor} {fullheight}"'
+                + ' transform="matrix(1 0 0 -1 0 0)">\n'
             )
             + svg
             + "</svg>\n"
