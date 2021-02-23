@@ -21,13 +21,15 @@ from fontbakery.callable import check, condition
 from fontbakery.checkrunner import FAIL, PASS, SKIP, Section
 from fontbakery.fonts_profile import profile_factory
 from vharfbuzz import Vharfbuzz
-from os.path import basename
+from os.path import basename, relpath
 from stringbrewer import StringBrewer
 from collidoscope import Collidoscope
 
 
 # Make FontBakery able to find the update_shaping_test_data package.
 sys.path.append(str(Path(__file__).parent.parent))
+
+shaping_basedir = Path("qa", "shaping_tests")
 
 
 profile_imports = ()
@@ -38,6 +40,51 @@ PROFILE_CHECKS = [
     "com.google.fonts/check/shaping/forbidden",
     "com.google.fonts/check/shaping/collides",
 ]
+
+HTML_HEADER = """
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Shaping Report</title>
+        <style type="text/css">
+            @font-face {font-family: "TestFont"; src: url(%s);}
+            .tf { font-family: "TestFont"; }
+            svg { height: 100px; transform: matrix(1, 0, 0, -1, 0, 0); }
+        </style>
+    </head>
+    <body>
+"""
+
+html_file = None
+
+
+def ensure_html_report_started(vharfbuzz):
+    global html_file
+    if html_file:
+        return
+    html_file = open(shaping_basedir / "report.html", "w")
+    filename = Path(vharfbuzz.filename)
+    html_file.write(HTML_HEADER % relpath(filename, shaping_basedir))
+
+
+def report_to_html(vharfbuzz, message, text=None, buf1=None, buf2=None):
+    ensure_html_report_started(vharfbuzz)
+    global html_file
+    if text:
+        message = message + ': <span class="tf">%s</span>' % text
+
+    html_file.write(message + "\n")
+    if buf1:
+        html_file.write("<pre>Got     : %s</pre>" % vharfbuzz.serialize_buf(buf1))
+    if buf2:
+        html_file.write("<pre>Expected: %s</pre>" % vharfbuzz.serialize_buf(buf2))
+    if buf1:
+        html_file.write("Buffer 1:")
+        html_file.write(vharfbuzz.buf_to_svg(buf1))
+    if buf2:
+        html_file.write("Buffer 2:")
+        html_file.write(vharfbuzz.buf_to_svg(buf2))
 
 
 def get_from_test_with_default(test, configuration, el, default=None):
@@ -58,7 +105,6 @@ def run_a_set_of_tests(ttFont, run_a_test, test_filter, generate_report):
     filename = Path(ttFont.reader.file.name)
     vharfbuzz = Vharfbuzz(filename)
     shaping_file_found = False
-    shaping_basedir = Path("qa", "shaping_tests")
     ran_a_test = False
     for shaping_file in shaping_basedir.glob("*.json"):
         shaping_file_found = True
@@ -101,7 +147,7 @@ def run_a_set_of_tests(ttFont, run_a_test, test_filter, generate_report):
                 yield PASS, f"{shaping_file}: No regression detected"
                 return
             else:
-                yield from generate_report(shaping_file, failed_tests)
+                yield from generate_report(vharfbuzz, shaping_file, failed_tests)
 
     if not shaping_file_found:
         yield SKIP, "No test files found."
@@ -138,20 +184,23 @@ def run_shaping_regression(filename, vharfbuzz, test, configuration, failed_test
         failed_tests.append((test, expectation, output_buf, output_serialized))
 
 
-def gereate_shaping_regression_report(shaping_file, failed_tests):
+def gereate_shaping_regression_report(vharfbuzz, shaping_file, failed_tests):
     report_items = []
+    header = f"{shaping_file}: Expected and actual shaping not matching"
+    report_to_html(vharfbuzz, f"<h2>{header}</h2>")
     for test, expected, output_buf, output_serialized in failed_tests:
         # Make HTML report here.
+        buf2 = None
+        if "=" in expected:
+            buf2 = vharfbuzz.buf_from_string(expected)
+        report_to_html(vharfbuzz, "", text=test["input"], buf1=output_buf, buf2=buf2)
         report_items.append(
             f" * Input '{test['input']}'\n"
             f"   expected: {expected}\n"
             f"   got: {output_serialized}"
         )
 
-    yield FAIL, (
-        f"{shaping_file}: Expected and actual shaping not matching.\n"
-        + "\n".join(report_items)
-    )
+    yield FAIL, (header + "\n" + "\n".join(report_items))
 
 
 # Are there any naughty glyphs?
@@ -189,15 +238,18 @@ def run_forbidden_glyph_test(filename, vharfbuzz, test, configuration, failed_te
         glyph_names = output_serialized.split("|")
         for forbidden in forbidden_glyphs:
             if forbidden in glyph_names:
-                failed_tests.append((shaping_text, output_serialized, forbidden))
+                failed_tests.append((shaping_text, output_buf, forbidden))
 
 
-def forbidden_glyph_test_results(shaping_file, failed_tests):
+def forbidden_glyph_test_results(vharfbuzz, shaping_file, failed_tests):
     report_items = []
-    for shaping_text, output_serialized, forbidden in failed_tests:
+    report_to_html(vharfbuzz, f"<h2>Illegal glyphs found in {shaping_file}</h2>")
+    for shaping_text, buf, forbidden in failed_tests:
+        msg = f"{shaping_text} produced '{forbidden}'"
+        report_to_html(vharfbuzz, "<li>" + msg, text=shaping_text, buf1=buf)
         # Make HTML report here.
         report_items.append(
-            f"      * {shaping_text} produced '{forbidden}'\n       {output_serialized}"
+            f"      * {msg}\n       {vharfbuzz.serialize_buf(buf, glyphsonly=True)}"
         )
 
     yield FAIL, (
@@ -246,18 +298,24 @@ def run_collides_glyph_test(filename, vharfbuzz, test, configuration, failed_tes
         glyphs = col.get_glyphs(shaping_text, buf=output_buf)
         collisions = col.has_collisions(glyphs)
         if collisions:
+            draw = col.draw_overlaps(glyphs, collisions)
             bumps = [f"{c.glyph1}/{c.glyph2}" for c in collisions]
-            failed_tests.append((shaping_text, bumps))
+            failed_tests.append((shaping_text, bumps, draw))
 
 
-def collides_glyph_test_results(shaping_file, failed_tests):
+def collides_glyph_test_results(vharfbuzz, shaping_file, failed_tests):
     report_items = []
     seen_bumps = {}
-    for shaping_text, bumps in failed_tests:
+    report_to_html(vharfbuzz, f"<h2>Glyph collisions found in {shaping_file}</h2>")
+    for shaping_text, bumps, draw in failed_tests:
         # Make HTML report here.
         if tuple(bumps) in seen_bumps:
             continue
         seen_bumps[tuple(bumps)] = True
+        report_to_html(
+            vharfbuzz,
+            f"<li> {',' .join(bumps)} collision found in e.g. <span class='tf'>{shaping_text}</span> <div>{draw}</div>",
+        )
         report_items.append(
             f"      * {',' .join(bumps)} collision found in e.g. '{shaping_text}'"
         )
