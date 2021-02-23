@@ -124,7 +124,7 @@ class Vharfbuzz:
         buf.glyph_infos = []
         buf.glyph_positions = []
         for item in s.split("|"):
-            m = re.match(r"^(.*)=(\d+)(@(\d+),(\d+))?(\+(\d+))?$", item)
+            m = re.match(r"^(.*)=(\d+)(@(-?\d+),(-?\d+))?(\+(-?\d+))?$", item)
             groups = m.groups()
             info = FakeItem()
             info.codepoint = self.ttfont.getGlyphID(groups[0])
@@ -179,15 +179,16 @@ class Vharfbuzz:
         paths = []
         svg = ""
         if "hhea" in self.ttfont:
-            ascender = self.ttfont["hhea"].ascender
-            descender = self.ttfont["hhea"].descender
+            ascender = self.ttfont["hhea"].ascender + 500
+            descender = self.ttfont["hhea"].descender - 500
             fullheight = ascender - descender
         elif "OS/2":
-            ascender = self.ttfont["OS/2"].sTypoAscender
-            descender = self.ttfont["OS/2"].sTypoDescender
+            ascender = self.ttfont["OS/2"].sTypoAscender + 500
+            descender = self.ttfont["OS/2"].sTypoDescender - 500
             fullheight = ascender - descender
         else:
             fullheight = 1500
+            descender = 500
         y_cursor = -descender
 
         for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
