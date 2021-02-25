@@ -25,10 +25,6 @@ from os.path import basename, relpath
 from stringbrewer import StringBrewer
 from collidoscope import Collidoscope
 
-
-# Make FontBakery able to find the update_shaping_test_data package.
-sys.path.append(str(Path(__file__).parent.parent))
-
 shaping_basedir = Path("qa", "shaping_tests")
 
 
@@ -50,7 +46,11 @@ HTML_HEADER = """
         <style type="text/css">
             @font-face {font-family: "TestFont"; src: url(%s);}
             .tf { font-family: "TestFont"; }
-            svg { height: 100px; transform: matrix(1, 0, 0, -1, 0, 0); }
+            html { font-family: sans-serif; }
+            h2 { background: #77f; color: #fafafa; padding: 12px; }
+            pre { font-size: 1.2rem; }
+            li { font-size: 1.2rem; }
+            svg { height: 100px; margin:10px; transform: matrix(1, 0, 0, -1, 0, 0); }
         </style>
     </head>
     <body>
@@ -68,22 +68,28 @@ def ensure_html_report_started(vharfbuzz):
     html_file.write(HTML_HEADER % relpath(filename, shaping_basedir))
 
 
-def report_to_html(vharfbuzz, message, text=None, buf1=None, buf2=None):
+def report_to_html(vharfbuzz, message, text=None, buf1=None, buf2=None, type="item", extra_data=None):
     ensure_html_report_started(vharfbuzz)
     global html_file
     if text:
         message = message + ': <span class="tf">%s</span>' % text
 
+    if type == "item":
+        message = "<li>%s</li>" % message
+    if type == "header":
+        message = "<h2>%s</h2>" % message
     html_file.write(message + "\n")
+    if extra_data:
+        html_file.write("<pre>%s</pre>" % extra_data)
     if buf1:
         html_file.write("<pre>Got     : %s</pre>" % vharfbuzz.serialize_buf(buf1))
     if buf2:
         html_file.write("<pre>Expected: %s</pre>" % vharfbuzz.serialize_buf(buf2))
     if buf1:
-        html_file.write("Buffer 1:")
+        html_file.write("Got:")
         html_file.write(vharfbuzz.buf_to_svg(buf1))
     if buf2:
-        html_file.write("Buffer 2:")
+        html_file.write("Expected:")
         html_file.write(vharfbuzz.buf_to_svg(buf2))
 
 
@@ -94,18 +100,21 @@ def get_from_test_with_default(test, configuration, el, default=None):
 
 def get_shaping_parameters(test, configuration):
     params = {}
-    for el in ["script", "language", "direction", "comparison_mode", "features"]:
+    for el in ["script", "language", "direction", "features"]:
         params[el] = get_from_test_with_default(test, configuration, el)
     return params
 
 
 # This is a very generic "do something with shaping" test runner.
 # It'll be given concrete meaning later.
-def run_a_set_of_tests(ttFont, run_a_test, test_filter, generate_report):
+def run_a_set_of_tests(
+    ttFont, run_a_test, test_filter, generate_report, preparation=None
+):
     filename = Path(ttFont.reader.file.name)
     vharfbuzz = Vharfbuzz(filename)
     shaping_file_found = False
     ran_a_test = False
+    extra_data = None
     for shaping_file in shaping_basedir.glob("*.json"):
         shaping_file_found = True
         try:
@@ -120,6 +129,9 @@ def run_a_set_of_tests(ttFont, run_a_test, test_filter, generate_report):
         except KeyError:
             yield FAIL, (f"{shaping_file}: Must have an 'tests' key dict.")
             return
+
+        if preparation:
+            extra_data = preparation(ttFont, configuration)
 
         failed_tests = []
         for test in shaping_tests:
@@ -139,13 +151,14 @@ def run_a_set_of_tests(ttFont, run_a_test, test_filter, generate_report):
             if only_fonts and basename(filename) not in only_fonts:
                 continue
 
-            run_a_test(filename, vharfbuzz, test, configuration, failed_tests)
+            run_a_test(
+                filename, vharfbuzz, test, configuration, failed_tests, extra_data
+            )
             ran_a_test = True
 
         if ran_a_test:
             if not failed_tests:
                 yield PASS, f"{shaping_file}: No regression detected"
-                return
             else:
                 yield from generate_report(vharfbuzz, shaping_file, failed_tests)
 
@@ -169,7 +182,9 @@ def com_google_fonts_check_shaping_regression(ttFont):
     )
 
 
-def run_shaping_regression(filename, vharfbuzz, test, configuration, failed_tests):
+def run_shaping_regression(
+    filename, vharfbuzz, test, configuration, failed_tests, extra_data
+):
     shaping_text = test["input"]
     parameters = get_shaping_parameters(test, configuration)
     output_buf = vharfbuzz.shape(shaping_text, parameters)
@@ -187,15 +202,25 @@ def run_shaping_regression(filename, vharfbuzz, test, configuration, failed_test
 def gereate_shaping_regression_report(vharfbuzz, shaping_file, failed_tests):
     report_items = []
     header = f"{shaping_file}: Expected and actual shaping not matching"
-    report_to_html(vharfbuzz, f"<h2>{header}</h2>")
+    report_to_html(vharfbuzz, header, type="header")
     for test, expected, output_buf, output_serialized in failed_tests:
+        extra_data = {k:test[k] for k in ["script", "language", "direction", "features"]
+            if k in test
+        }
         # Make HTML report here.
         buf2 = None
         if "=" in expected:
             buf2 = vharfbuzz.buf_from_string(expected)
-        report_to_html(vharfbuzz, "", text=test["input"], buf1=output_buf, buf2=buf2)
+        report_to_html(
+            vharfbuzz,
+            "Shaping did not match",
+            text=test["input"],
+            buf1=output_buf,
+            buf2=buf2,
+            extra_data=extra_data
+        )
         report_items.append(
-            f" * Input '{test['input']}'\n"
+            f" * Input '{test['input']} {extra_data or ''}'\n"
             f"   expected: {expected}\n"
             f"   got: {output_serialized}"
         )
@@ -217,7 +242,9 @@ def com_google_fonts_check_shaping_forbidden(ttFont):
     )
 
 
-def run_forbidden_glyph_test(filename, vharfbuzz, test, configuration, failed_tests):
+def run_forbidden_glyph_test(
+    filename, vharfbuzz, test, configuration, failed_tests, extra_data
+):
     is_stringbrewer = (
         get_from_test_with_default(test, configuration, "input_type", "string")
         == "pattern"
@@ -243,19 +270,17 @@ def run_forbidden_glyph_test(filename, vharfbuzz, test, configuration, failed_te
 
 def forbidden_glyph_test_results(vharfbuzz, shaping_file, failed_tests):
     report_items = []
-    report_to_html(vharfbuzz, f"<h2>Illegal glyphs found in {shaping_file}</h2>")
+    msg = f"{shaping_file}: Forbidden glyphs found while shaping"
+    report_to_html(vharfbuzz, msg, type="header")
     for shaping_text, buf, forbidden in failed_tests:
         msg = f"{shaping_text} produced '{forbidden}'"
-        report_to_html(vharfbuzz, "<li>" + msg, text=shaping_text, buf1=buf)
+        report_to_html(vharfbuzz, msg, text=shaping_text, buf1=buf)
         # Make HTML report here.
         report_items.append(
             f"      * {msg}\n       {vharfbuzz.serialize_buf(buf, glyphsonly=True)}"
         )
 
-    yield FAIL, (
-        f"{shaping_file}: Forbidden glyphs found while shaping.\n"
-        + "\n".join(report_items)
-    )
+    yield FAIL, (msg + ".\n" + "\n".join(report_items))
 
 
 # Are there any collisions?
@@ -270,20 +295,34 @@ def com_google_fonts_check_shaping_collides(ttFont):
         lambda test, configuration: "collidoscope" in test
         or "collidoscope" in configuration,
         collides_glyph_test_results,
+        setup_glyph_collides,
     )
 
 
-def run_collides_glyph_test(filename, vharfbuzz, test, configuration, failed_tests):
+def setup_glyph_collides(ttFont, configuration):
+    filename = Path(ttFont.reader.file.name)
+    collidoscope_configuration = configuration.get("collidoscope")
+    if not collidoscope_configuration:
+        return {}
+    col = Collidoscope(
+        filename,
+        collidoscope_configuration,
+        direction=configuration.get("direction", "LTR"),
+    )
+    return {"collidoscope": col}
+
+
+def run_collides_glyph_test(
+    filename, vharfbuzz, test, configuration, failed_tests, extra_data
+):
+    col = extra_data["collidoscope"]
     is_stringbrewer = (
         get_from_test_with_default(test, configuration, "input_type", "string")
         == "pattern"
     )
     parameters = get_shaping_parameters(test, configuration)
-    collidoscope_configuration = test.get(
-        "collidoscope", configuration.get("collidoscope")
-    )
-    col = Collidoscope(
-        filename, collidoscope_configuration, direction=parameters["direction"] or "LTR"
+    allowed_collisions = get_from_test_with_default(
+        test, configuration, "allowedcollisions", []
     )
     if is_stringbrewer:
         sb = StringBrewer(
@@ -297,32 +336,34 @@ def run_collides_glyph_test(filename, vharfbuzz, test, configuration, failed_tes
         output_buf = vharfbuzz.shape(shaping_text, parameters)
         glyphs = col.get_glyphs(shaping_text, buf=output_buf)
         collisions = col.has_collisions(glyphs)
-        if collisions:
+        bumps = [f"{c.glyph1}/{c.glyph2}" for c in collisions]
+        bumps = [b for b in bumps if b not in allowed_collisions]
+        if bumps:
             draw = col.draw_overlaps(glyphs, collisions)
-            bumps = [f"{c.glyph1}/{c.glyph2}" for c in collisions]
-            failed_tests.append((shaping_text, bumps, draw))
+
+            failed_tests.append((shaping_text, bumps, draw, output_buf))
 
 
 def collides_glyph_test_results(vharfbuzz, shaping_file, failed_tests):
     report_items = []
     seen_bumps = {}
-    report_to_html(vharfbuzz, f"<h2>Glyph collisions found in {shaping_file}</h2>")
-    for shaping_text, bumps, draw in failed_tests:
+    msg = f"{shaping_file}: %i collisions found while shaping" % len(failed_tests)
+    report_to_html(vharfbuzz, msg, type="header")
+    for shaping_text, bumps, draw, buf in failed_tests:
         # Make HTML report here.
         if tuple(bumps) in seen_bumps:
             continue
         seen_bumps[tuple(bumps)] = True
         report_to_html(
             vharfbuzz,
-            f"<li> {',' .join(bumps)} collision found in e.g. <span class='tf'>{shaping_text}</span> <div>{draw}</div>",
+            f"{',' .join(bumps)} collision found in e.g. <span class='tf'>{shaping_text}</span> <div>{draw}</div>",
+            buf1=buf,
         )
         report_items.append(
             f"      * {',' .join(bumps)} collision found in e.g. '{shaping_text}'"
         )
 
-    yield FAIL, (
-        f"{shaping_file}: Collisions found while shaping.\n" + "\n".join(report_items)
-    )
+    yield FAIL, (msg + ".\n" + "\n".join(report_items))
 
 
 profile.auto_register(globals())

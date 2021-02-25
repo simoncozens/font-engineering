@@ -3,7 +3,7 @@
     "collidoscope": { "area": 0 },
     "ingredients": {
       "TrickyLatin": "[dTpLl]",
-      "AccentedStuff": "[\u00E0-\u00F6]"
+      "AccentedStuff": "[\u00Ed-\u00ef]"
     }
   },
   "tests": [
