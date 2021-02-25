@@ -102,7 +102,7 @@ This is a profile for [fontbakery](https://github.com/googlefonts/fontbakery) wh
 
 To use it:
 
--   ensure that [`vharfbuzz.py`](#vharfbuzz-py) is in your Python path
+-   ensure that [`vharfbuzz.py`](#vharfbuzzpy) is in your Python path
 -   place JSON files similar to [these](https://github.com/simoncozens/font-engineering/tree/master/qa/shaping_tests) in a directory called `qa/shaping_tests` (Yes, I'm sorry that's hard-coded).
 -   run `fontbakery check-profile ./fontbakery-shaping.py <yourfont>`
 -   read the report on the terminal, and also look in `qa/shaping_tests/report.html` for the HTML report.
