@@ -94,8 +94,22 @@ font2          BehxIni.outD1=0|OneDotAboveNS=0|SeenMed.SWinAoutT2=1|SeenFin=2
 
 StringBrewer has graduated to [its own repository](https://github.com/simoncozens/stringbrewer).
 
+## [`fontbakery-shaping.py`](./fontbakery-shaping.py)
+
+This is a profile for [fontbakery](https://github.com/googlefonts/fontbakery) which adds regression testing for font shaping. It also produces pretty HTML reports:
+
+![](fontbakery-report.png)
+
+To use it:
+
+-   ensure that [`vharfbuzz.py`](#vharfbuzz-py) is in your Python path
+-   place JSON files similar to [these](https://github.com/simoncozens/font-engineering/tree/master/qa/shaping_tests) in a directory called `qa/shaping_tests` (Yes, I'm sorry that's hard-coded).
+-   run `fontbakery check-profile ./fontbakery-shaping.py <yourfont>`
+-   read the report on the terminal, and also look in `qa/shaping_tests/report.html` for the HTML report.
 
 ## [`gnipahs.py`](./gnipahs.py)
+
+_This is the *old* shaping regression tester. You should use `fontbakery-shaping.py` above instead._
 
 `gnipahs` is a regression tester for font shaping. You pass it a font file
 and a series of tests (some of which can be StringBrewer recipes) and it will
