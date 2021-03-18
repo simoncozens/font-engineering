@@ -79,16 +79,9 @@ font1          BehxIni.outD1=0|sp0=0|sp0=0|OneDotAboveNS=0|SeenMed.SWinAoutT2=1|
 font2          BehxIni.outD1=0|OneDotAboveNS=0|SeenMed.SWinAoutT2=1|SeenFin=2
 ```
 
-## [`vharfbuzz.py`](./vharfbuzz.py)
+## vharfbuzz
 
-`shape-diff.py` requires a library called vharfbuzz, which is a smarter wrapper around the wonderful [uharfbuzz](https://github.com/harfbuzz/uharfbuzz). uharfbuzz is a bridge between Python and harfbuzz, but it's quite low-level. vharfbuzz makes it a tiny bit easier to use. See the docstrings for this module. Here is a sample session:
-
-```python
->>> v = Vharfbuzz("Roboto-Regular.ttf")
->>> buf = v.shape("official")
->>> v.serialize_buf(buf)
-'o=0+1168|f=1+711|fi=2+1134|c=4+1072|i=5+497|a=6+1114|l=7+497'
-```
+vharfbuzz has graduated to [its own repository](https://github.com/simoncozens/vharfbuzz).
 
 ## [`stringbrewer`](./stringbrewer)
 
