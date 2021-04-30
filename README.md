@@ -54,7 +54,13 @@ _every single time_, so I wrote `fontshell`. Run `fontshell whatever.otf` and yo
 
 ## [`dumptable`](./dumptable)
 
+(Superceded by otfsurgeon)
+
 This extracts a table from a sfnt file and outputs it as a raw binary string. I use this when debugging glyph naming issues and other times TTX gets too clever and doesn't tell me everything I need to know about a table. It's rare that you'll need it, but if you need it, you'll _really_ need it.
+
+## [`glyphs2svg.py`](./glyphs2svg.py)
+
+Converts a .glyphs file to a directory of .svg files.
 
 ## [`compare_shape.py`](./compare_shape.py)
 
