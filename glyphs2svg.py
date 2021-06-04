@@ -8,14 +8,15 @@ from lxml import etree
 import sys
 
 
-def add_paths(svg, layer, t, additional_transform=Identity):
+def add_paths(layer, t, additional_transform=Identity):
+    commands = ""
     for p in layer.paths:
         svgpen = SVGPathPen(None)
         transformpen = TransformPen(svgpen, t)
         componenttransformpen = TransformPen(transformpen, additional_transform)
         p.draw(componenttransformpen)
-        svg_path = etree.fromstring(f'<path d="{svgpen.getCommands()}" />')
-        svg.append(svg_path)
+        commands += svgpen.getCommands()
+    return commands
 
 
 def write_glyph(dir, font, glyph, master_id):
@@ -37,12 +38,15 @@ def write_glyph(dir, font, glyph, master_id):
     et = etree.ElementTree(svg)
 
     t = Identity.scale(1, -1).translate(0, -master.ascender)
-    add_paths(svg, layer, t)
+    commands = add_paths(layer, t)
 
     # Components
     for c in layer.components:
         comp_layer = font.glyphs[c.name].layers[master.id]
-        add_paths(svg, comp_layer, t, c.transform)
+        commands += add_paths(comp_layer, t, c.transform)
+
+    svg_path = etree.fromstring(f'<path d="{commands}" />')
+    svg.append(svg_path)
 
     et.write("%s/%s.svg" % (dir, glyph), pretty_print=True)
 
