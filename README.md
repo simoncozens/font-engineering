@@ -179,3 +179,16 @@ Deepest   :  dvmvRR(-440) dvmvLL(-437) dvNG_R(-373)
 Shallowest:  dvCandrabindu(739) dvmEcandra_Anusvara(739) dvAnusvara.amI(834)
                                                                           [yMin]
 ```
+
+## [`find-nested-components.py`](./find-nested-components.py)
+
+ftxvalidator tells you if the font has deeply nested components (TTF components
+which call other TTF components). But it doesn't tell you *which* glyphs have
+the problem. This finds nested components in a TrueType font over a given depth:
+
+```
+$ python3 find-nested-components.py --depth=3 MyFont-Regular.ttf
+Atilde has depth 3: Atilde -> tildecomb.cap -> tilde -> tildecomb
+Ohungarumlaut has depth 4: Ohungarumlaut -> uni030B.cap -> uni030B -> acute -> acutecomb
+...
+```
