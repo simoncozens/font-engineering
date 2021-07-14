@@ -13,6 +13,7 @@ parser.add_argument("-g", "--glyphset", action="store_true", help="show glyph na
 parser.add_argument("-m", "--marks", action="store_true", help="show marks and bases")
 parser.add_argument("-M", "--metrics", action="store_true", help="show glyph metrics")
 parser.add_argument("--codepoints", action="store_true", help="show glyph codepoints")
+parser.add_argument("--copyright", action="store_true", help="show copyright string")
 parser.add_argument(
     "--coverage", action="store_true", help="show Unicode coverage ranges"
 )
@@ -43,6 +44,9 @@ if len(sys.argv) < 3:
 if args.codepoints or args.metrics:
     args.glyphset = True
 
+if args.copyright:
+    print("Copyright: %s" % font["name"].getDebugName(0))
+    
 if args.glyphfor:
     if args.glyphfor.startswith("U+") or args.glyphfor.startswith("0x"):
         g = int(args.glyphfor[2:], 16)
