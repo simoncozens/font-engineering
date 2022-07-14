@@ -21,18 +21,18 @@ Top tip: if you're using `zsh` for your shell, add this to your `.zshrc` and you
 
     compdef '_files -g "*.?tf"' shape
 
-## [`sampletext`](./sampletext)
+## [`gimmesometext`](./gimmesometext)
 
 I often need sample text in lots of different scripts and languages. I
 want to be able to say "give me a bunch of Tamil strings", and this does
 just that:
 
-    $ sampletext --script=Taml # ISO 15924 script code
-    $ sampletext --script=tml2 # OpenType script code
-    $ sampletext ta # ISO 639-1 language code
+    $ gimmesometext --script=Taml # ISO 15924 script code
+    $ gimmesometext --script=tml2 # OpenType script code
+    $ gimmesometext ta # ISO 639-1 language code
 
-    $ sampletext --script=Cyrl az # Filter by script and language
-    $ sampletext --script=Arab az # Filter by script and language
+    $ gimmesometext --script=Cyrl az # Filter by script and language
+    $ gimmesometext --script=Arab az # Filter by script and language
 
 ## [`interrofont`](./interrofont)
 
