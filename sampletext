@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+from fontTools.unicodedata import ot_tag_to_script
+import gflanguages
+import sys
+import argparse
+
+parser = argparse.ArgumentParser(description="Display some sample text")
+parser.add_argument("--script", help="ISO or OpenType script code")
+parser.add_argument(
+    "language", metavar="LANG", type=str, nargs="?", help="ISO language code"
+)
+
+args = parser.parse_args()
+
+langs = gflanguages.LoadLanguages()
+
+if not args.script and not args.language:
+    parser.print_help(sys.stderr)
+    sys.exit(1)
+
+if args.script and ot_tag_to_script(args.script):
+    try:
+        args.script = ot_tag_to_script(args.script)
+    except ValueError:
+        pass
+
+possibles = langs.keys()
+if args.script:
+    possibles = [k for k in possibles if "_" + args.script in k]
+
+if args.language:
+    possibles = [k for k in possibles if k.startswith(args.language)]
+
+if not possibles:
+    print(
+        "No samples found for %s"
+        % ((args.language or "*") + "_" + (args.script or "*"))
+    )
+    sys.exit(1)
+
+seen = {}
+for p in possibles:
+    item = langs[p]
+    if not item.sample_text:
+        continue
+    for _, sample in item.sample_text.ListFields():
+        for line in sample.split("\n"):
+            if line in seen:
+                continue
+            seen[line] = True
+            print(line)
