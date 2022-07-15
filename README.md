@@ -108,63 +108,11 @@ StringBrewer has graduated to [its own repository](https://github.com/simoncozen
 
 ## [`fontbakery-shaping.py`](./fontbakery-shaping.py)
 
-This is a profile for [fontbakery](https://github.com/googlefonts/fontbakery) which adds regression testing for font shaping. It also produces pretty HTML reports:
-
-![](fontbakery-report.png)
-
-To use it:
-
--   ensure that [`vharfbuzz.py`](#vharfbuzzpy) is in your Python path
--   place JSON files similar to [these](https://github.com/simoncozens/font-engineering/tree/master/qa/shaping_tests) in a directory called `qa/shaping_tests` (Yes, I'm sorry that's hard-coded).
--   run `fontbakery check-profile ./fontbakery-shaping.py <yourfont>`
--   read the report on the terminal, and also look in `qa/shaping_tests/report.html` for the HTML report.
+Superseded by `fontbakery check-profile fontbakery.profiles.shaping`
 
 ## [`gnipahs.py`](./gnipahs.py)
 
-_This is the *old* shaping regression tester. You should use `fontbakery-shaping.py` above instead._
-
-`gnipahs` is a regression tester for font shaping. You pass it a font file
-and a series of tests (some of which can be StringBrewer recipes) and it will
-check your shaping. The default tests are for overlaps (using [collidoscope](https://github.com/simoncozens/collidoscope)) and shaping expectations. For example, here is a regression test file:
-
-```
-# This is a comment
-#
-# Literals (in quotes) by themselves just run the overlap test
-"پپپ"
-#
-# You can also test that the shaping output is what you expect.
-#
-"سبے":BARI_YEf1=2+272|sdb.yb=1+0|BEm8=1+227@<0,275>|SINi9=0+450@<0,311>
-"بممے":BARI_YEf1=3+272|MIMm6=2+104@<0,275>|MIMm4=1+203@<0,431>|sdb=0+0@<-34,230>|BEi7=0+412@<0,662>
-#
-# Lines without quotes are StringBrewer recipes
-#
-DotsBelow{0,3}
-DotsBelow{0,3} TrickyEndCharacters
-
-SomethingWithDotsBelow = ب,ی,پ
-TrickyEndCharacters = ی,ے
-```
-
-This may output test results like so:
-
-```
-% python3 font.otf regression.txt
-🗸  'پپپ' overlap test
-🗴  'سبے' overlap test
-🗴  'سبے' shaping text: expected BARI_YEf1=2+272|sdb.yb=1+0|BEm8=1+227@<0,275>|SINi9=0+450@<0,311> got BARI_YEf1=2+272|sdb=1+0@<-26,58>|BEm8=1+227@<0,275>|SINi9=0+450@<0,311>
-
-...
-
-🗴  'پپبے' overlap test
-🗴  'پپیے' overlap test
-🗴  'پپپے' overlap test
-
-125 tests, 35 passed, 90 failing
-```
-
-Oh dear.
+Superseded by `fontbakery check-profile fontbakery.profiles.shaping`
 
 ## [`glypholympics`](./glypholympics)
 
