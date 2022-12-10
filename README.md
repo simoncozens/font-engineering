@@ -153,3 +153,26 @@ Atilde has depth 3: Atilde -> tildecomb.cap -> tilde -> tildecomb
 Ohungarumlaut has depth 4: Ohungarumlaut -> uni030B.cap -> uni030B -> acute -> acutecomb
 ...
 ```
+
+## [`kernmaker.py`](./kernmaker.py)
+
+This is a simple Python script for turning a wordlist into a list of kerning test words. Here is some sample output, given the `/usr/share/dict/words` wordlist which comes with Mac OS:
+
+```
+$ python3 kernmaker.py /usr/share/dict/words
+...
+q Aquarius Equisetaceae Squamata Yquem qasida quinaquina subquality nonacquiescence subheadquarters qere equidominant earthquake Iraqian triquetric alquifou umquhile unquiet qoph xyloquinone Umpqua zaqqum miqra torques sesquitertial outqueen querying bouquet cawquaw superexquisiteness triptyque q
+...
+```
+
+As you can see, it tries to find words in the wordlist which contain `Aq`, `qA`, `Bq`, `qB`, ... `cq`, `qc`, `dq`, `qd`, and so on. You can split this into left-side and right-side pairs with the `-s` option:
+
+```
+$ python3 kernmaker.py /usr/share/dict/words
+...
+q+ qasida qere qintar qoph zaqqum miqra unsqueezed q+
++q Aquila Equisetum Squamipennes Yquem Guaque subquintuple acquisible headquarters equalist earthquaking bisiliquous pulque kumquat unquestionedness alloquy Umpqua hyperquadric squatina outquarters tuque cawquaw exquisitism triptyque +q
+...
+```
+
+A key point about it is that it doesn't assume anything about the alphabet, but treats every distinctly occurring character in your wordlist as a potential letter to be kerned; this means it should work for e.g. African languages, words containing punctuation, and so on.
