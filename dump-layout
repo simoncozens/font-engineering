@@ -1,0 +1,27 @@
+#!/opt/homebrew/bin/python3
+from fontTools.ttLib import TTFont
+import sys
+
+font = TTFont(sys.argv[1])
+
+
+def dump_ls(table, title, langsys):
+    for feature_ix in langsys.FeatureIndex:
+        feature = table.FeatureList.FeatureRecord[feature_ix]
+        print(
+            f"{title} {feature.FeatureTag} "
+            + ",".join([str(x) for x in feature.Feature.LookupListIndex])
+        )
+
+
+for table in ["GSUB", "GPOS"]:
+    if table not in font:
+        print(f"Font does not contain a {table} table")
+        continue
+    print("# " + table)
+    for sr in font[table].table.ScriptList.ScriptRecord:
+        script = sr.Script
+        default = script.DefaultLangSys
+        dump_ls(font[table].table, f"{sr.ScriptTag}/dflt", default)
+        for lsr in script.LangSysRecord:
+            dump_ls(font[table].table, f"{sr.ScriptTag}/{lsr.LangSysTag}", lsr.LangSys)
