@@ -1,0 +1,21 @@
+import sys
+import uharfbuzz as hb
+from vharfbuzz import Vharfbuzz
+
+font, string = sys.argv[1], sys.argv[2]
+vhb = Vharfbuzz(font)
+buf = vhb.shape(string, parameters={"variations":{"wght": 900}})
+heighest = None
+lowest = None
+
+for glyph, pos in zip(buf.glyph_infos, buf.glyph_positions):
+    extents = vhb.hbfont.get_glyph_extents(glyph.codepoint)
+    top = extents.y_bearing + pos.y_offset
+    bottom = extents.y_bearing + extents.height + pos.y_offset
+    print(vhb.hbfont.get_glyph_name(glyph.codepoint), top, bottom)
+    if heighest is None or top > heighest:
+        heighest = top
+    if lowest is None or bottom < lowest:
+        lowest = bottom
+
+print(heighest, lowest)
