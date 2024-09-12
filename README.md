@@ -176,3 +176,19 @@ q+ qasida qere qintar qoph zaqqum miqra unsqueezed q+
 ```
 
 A key point about it is that it doesn't assume anything about the alphabet, but treats every distinctly occurring character in your wordlist as a potential letter to be kerned; this means it should work for e.g. African languages, words containing punctuation, and so on.
+
+## [`lookup-size.py`](./lookup-size.py)
+
+A tool for identifying large lookups in GSUB and GPOS tables, reporting
+them in order of total byte size and the location in the feature file 
+where they were defined.
+
+```
+GSUB table
+==========
+
+90 = sources/build/features.fea:11214:5 (DotAvoidance_reverse_top) 	 183960
+92 = sources/build/features.fea:25591:5 (DotAvoidance_top) 	 62362
+56 = sources/build/features.fea:499:5 (connections) 	 54352
+...
+```
