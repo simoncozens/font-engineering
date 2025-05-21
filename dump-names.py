@@ -8,7 +8,8 @@ import sys
 font = TTFont(sys.argv[1])
 names = {}
 for record in font["name"].names:
-    names[record.nameID] = record.toUnicode()
+    if record.nameID < 255:
+        names[record.nameID] = record.toUnicode()
 
 table = Table(title="name")
 table.add_column("Name ID", justify="right", style="cyan")
