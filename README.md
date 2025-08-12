@@ -36,7 +36,23 @@ just that:
 
 ## [`interrofont`](./interrofont)
 
-General purpose tool for investigating OTF/TTF information from the command line. See http://www.corvelsoftware.co.uk/software/interrofont/ for usage.
+General purpose tool for investigating OTF/TTF information from the
+command line:
+
+```
+  -n, --name            show font family name
+  -v, --version         show font version
+  -c, --count           show glyph count
+  -g, --glyphset        show glyph names
+  -m, --marks           show marks and bases
+  -M, --metrics         show glyph metrics
+  --codepoints          show glyph codepoints
+  --coverage            show Unicode coverage ranges
+  -l, --layout          show OpenType layout information
+  --glyph-for CHAR_OR_CODEPOINT
+                        show glyph name for given character or codepoint
+  --all                 show everything
+```
 
 ## [`otfsurgeon`](./otfsurgeon)
 
