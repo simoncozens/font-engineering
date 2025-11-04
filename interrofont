@@ -101,6 +101,9 @@ def show_layout_info_for_table(font, t):
         return
 
     table = font[t].table
+    if not table.LookupList:
+        print("No lookup list for %s table!" % t)
+        return
     print("%s table: %i lookups" % (t, len(table.LookupList.Lookup)))
     for scriptRecord in table.ScriptList.ScriptRecord:
         scriptTag = scriptRecord.ScriptTag
